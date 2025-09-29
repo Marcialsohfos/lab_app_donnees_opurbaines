@@ -215,8 +215,8 @@ function getImageBaseUrl() {
     }
 }
 
-const API_BASE_URL = getApiBaseUrl();
-const IMAGE_BASE_URL = getImageBaseUrl();
+const API_BASE_URL = '/.netlify/functions/api';
+const IMAGE_BASE_URL = 'https://lab-app-donnees-opurbaines.onrender.com/images';
 
 console.log('🌐 Configuration API:', {
     environnement: window.location.hostname === 'localhost' ? 'Développement' : 'Production',
