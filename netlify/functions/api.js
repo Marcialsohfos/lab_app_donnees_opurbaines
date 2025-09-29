@@ -3,6 +3,7 @@ const BACKEND_URL = 'https://lab-app-donnees-opurbaines.onrender.com';
 
 exports.handler = async (event, context) => {
     console.log('📍 Fonction Netlify appelée:', event.path, event.httpMethod);
+    console.log('📋 Query parameters:', event.queryStringParameters);
     
     const headers = {
         'Content-Type': 'application/json',
@@ -17,13 +18,23 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        // Proxy vers le backend Render
-        const renderResponse = await fetch(`${BACKEND_URL}${event.path}${event.rawQuery ? '?' + event.rawQuery : ''}`, {
+        // Construire l'URL pour le backend Render
+        const path = event.path.replace('/.netlify/functions/api', '/api');
+        const queryString = event.rawQuery ? `?${event.rawQuery}` : '';
+        const backendUrl = `${BACKEND_URL}${path}${queryString}`;
+        
+        console.log('🔗 Appel backend:', backendUrl);
+
+        const renderResponse = await fetch(backendUrl, {
             method: event.httpMethod,
             headers: {
                 'Content-Type': 'application/json',
-            }
+            },
+            // Timeout de 10 secondes
+            signal: AbortSignal.timeout(10000)
         });
+
+        console.log('📡 Statut backend:', renderResponse.status);
 
         if (renderResponse.ok) {
             const data = await renderResponse.json();
@@ -34,19 +45,26 @@ exports.handler = async (event, context) => {
                 body: JSON.stringify(data)
             };
         } else {
-            throw new Error('Backend non disponible');
+            console.log('❌ Erreur backend:', renderResponse.status);
+            // Si le backend renvoie une erreur, utiliser les données de secours
+            return getFallbackData(event, headers);
         }
     } catch (error) {
-        console.log('🔄 Utilisation des données de secours:', error.message);
+        console.log('🔴 Erreur fetch:', error.message);
+        console.log('🔄 Utilisation des données de secours');
         
-        // 🎯 DONNÉES DE SECOURS
+        // Utiliser les données de secours en cas d'erreur
         return getFallbackData(event, headers);
     }
 };
 
 function getFallbackData(event, headers) {
+    const path = event.path.replace('/.netlify/functions/api', '');
+    
+    console.log('🎯 Route de secours:', path);
+
     // Routes de secours
-    if (event.path === '/api/villes' || event.path === '/api/villes/') {
+    if (path === '/villes' || path === '/villes/') {
         return {
             statusCode: 200,
             headers,
@@ -54,15 +72,19 @@ function getFallbackData(event, headers) {
         };
     }
 
-    if (event.path === '/api/communes' || event.path === '/api/communes/') {
+    if (path === '/communes' || path === '/communes/') {
         const ville = event.queryStringParameters?.ville || '';
+        console.log('🏙️ Ville demandée:', ville);
+        
         let communes = [];
         
         if (ville.toLowerCase().includes('douala')) {
-            communes = ['Douala 1', 'Douala 2', 'Douala 3', 'Douala 4', 'Douala 5'];
+            communes = ['Douala I', 'Douala II', 'Douala III', 'Douala IV', 'Douala V'];
         } else if (ville.toLowerCase().includes('yaound')) {
-            communes = ['Yaoundé 1', 'Yaoundé 2', 'Yaoundé 3', 'Yaoundé 4', 'Yaoundé 5', 'Yaoundé 6', 'Yaoundé 7'];
+            communes = ['Yaoundé I', 'Yaoundé II', 'Yaoundé III', 'Yaoundé IV', 'Yaoundé V', 'Yaoundé VI', 'Yaoundé VII'];
         }
+        
+        console.log('🏘️ Communes retournées:', communes);
         
         return {
             statusCode: 200,
@@ -71,8 +93,10 @@ function getFallbackData(event, headers) {
         };
     }
 
-    if (event.path === '/api/indicateurs' || event.path === '/api/indicateurs/') {
+    if (path === '/indicateurs' || path === '/indicateurs/') {
         const commune = event.queryStringParameters?.commune || '';
+        console.log('📊 Indicateurs pour commune:', commune);
+        
         return {
             statusCode: 200,
             headers,
@@ -93,14 +117,28 @@ function getFallbackData(event, headers) {
                         classe: "Primaire",
                         nid_poule: "Oui",
                         points_lumineux: 45,
-                        image: ""
+                        image: "troncon1.jpg"
+                    },
+                    {
+                        quartier: "Quartier B", 
+                        nom: "Rue Secondaire",
+                        lineaire_ml: 1800,
+                        classe: "Secondaire",
+                        nid_poule: "Non",
+                        points_lumineux: 28,
+                        image: "troncon2.jpg"
                     }
                 ],
                 quartiers_taudis: [
                     {
                         nom: "Quartier B",
                         superficie_m2: 12500,
-                        image: ""
+                        image: "taudis1.jpg"
+                    },
+                    {
+                        nom: "Quartier C",
+                        superficie_m2: 8500,
+                        image: "taudis2.jpg"
                     }
                 ],
                 analyse_classes_voirie: {
@@ -115,14 +153,15 @@ function getFallbackData(event, headers) {
         };
     }
 
-    if (event.path === '/api/health' || event.path === '/api/health/') {
+    if (path === '/health' || path === '/health/') {
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 status: 'healthy',
                 message: 'Netlify Function active',
-                backend: 'fallback'
+                backend: 'fallback',
+                timestamp: new Date().toISOString()
             })
         };
     }
@@ -130,6 +169,10 @@ function getFallbackData(event, headers) {
     return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: 'Route non trouvée: ' + event.path })
+        body: JSON.stringify({ 
+            error: 'Route non trouvée',
+            path: path,
+            available_routes: ['/villes', '/communes', '/indicateurs', '/health']
+        })
     };
 }
