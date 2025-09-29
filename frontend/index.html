@@ -200,7 +200,7 @@ function getApiBaseUrl() {
     if (host === 'localhost' || host === '127.0.0.1') {
         return 'http://127.0.0.1:5000/api';  // Développement local
     } else {
-        return 'https://ton-backend.onrender.com/api';    // Production Netlify
+        return 'https://lab-app-donnees-opurbaines.onrender.com';    // Production Netlify
     }
 }
 
@@ -211,7 +211,7 @@ function getImageBaseUrl() {
         return 'http://127.0.0.1:5000/images';  // Développement local
     } else {
         // Sur Netlify, vous devrez stocker les images ailleurs
-        return 'https://ton-backend.onrender.com/images'; // Exemple Cloudinary
+        return 'https://lab-app-donnees-opurbaines.onrender.com/images'; // Exemple Cloudinary
     }
 }
 
