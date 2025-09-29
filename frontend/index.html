@@ -223,6 +223,20 @@ console.log('🌐 Configuration API:', {
     apiUrl: API_BASE_URL,
     imageUrl: IMAGE_BASE_URL
 });
+// TEST DE CONNEXION IMMÉDIAT
+console.log('🔗 Test de connexion en cours...');
+fetch(`${API_BASE_URL}/health`)
+    .then(response => {
+        console.log('📡 Statut HTTP:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Réponse du backend:', data);
+    })
+    .catch(error => {
+        console.error('❌ Erreur de connexion:', error);
+        console.log('🌐 URL essayée:', API_BASE_URL);
+    });
   //FIN CONFIGURATION NETLIFY///
     // Configuration adaptée pour la production
 
