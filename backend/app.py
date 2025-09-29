@@ -16,7 +16,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+# Autorise toutes les origines pour le déploiement
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -383,8 +384,14 @@ def serve_frontend():
 
 @app.route('/api/villes', methods=['GET'])
 def get_villes():
-    villes = indicateurs_manager.get_villes()
-    return jsonify(villes)
+    logger.info("📋 Requête /api/villes reçue")
+    try:
+        villes = indicateurs_manager.get_villes()
+        logger.info(f"✅ Villes envoyées: {villes}")
+        return jsonify(villes)
+    except Exception as e:
+        logger.error(f"❌ Erreur dans /api/villes: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/communes', methods=['GET'])
 def get_communes():
@@ -463,7 +470,14 @@ def debug_commune_data():
         'donnees_brutes': cleaned_data
     })
 
-
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Endpoint de vérification de santé"""
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Backend is running',
+        'villes_disponibles': indicateurs_manager.get_villes()
+    })
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
