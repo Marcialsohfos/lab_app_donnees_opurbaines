@@ -194,13 +194,14 @@
     <script>
     //====================CONFIGURATION NETLIFY=====================//
      // Configuration smart pour Netlify
+//====================CONFIGURATION NETLIFY=====================//
 function getApiBaseUrl() {
     const host = window.location.hostname;
     
     if (host === 'localhost' || host === '127.0.0.1') {
         return 'http://127.0.0.1:5000/api';  // Développement local
     } else {
-        return 'https://lab-app-donnees-opurbaines.onrender.com';    // Production Netlify
+        return '/.netlify/functions/api';    // Production Netlify - CORRIGÉ
     }
 }
 
@@ -210,13 +211,12 @@ function getImageBaseUrl() {
     if (host === 'localhost' || host === '127.0.0.1') {
         return 'http://127.0.0.1:5000/images';  // Développement local
     } else {
-        // Sur Netlify, vous devrez stocker les images ailleurs
-        return 'https://lab-app-donnees-opurbaines.onrender.com/images'; // Exemple Cloudinary
+        return 'https://lab-app-donnees-opurbaines.onrender.com/images'; // Production
     }
 }
 
-const API_BASE_URL = '/.netlify/functions/api';
-const IMAGE_BASE_URL = 'https://lab-app-donnees-opurbaines.onrender.com/images';
+const API_BASE_URL = getApiBaseUrl();
+const IMAGE_BASE_URL = getImageBaseUrl();
 
 console.log('🌐 Configuration API:', {
     environnement: window.location.hostname === 'localhost' ? 'Développement' : 'Production',
@@ -458,7 +458,7 @@ document.getElementById('communeSelect').addEventListener('change', function () 
 
 // Exemple : envoyer des données vers le backend Render
   function envoyerFormulaire(formData) {
-    fetch("https://mon-app-backend.onrender.com/endpoint", {
+    fetch("https://lab-app-donnees-opurbaines.onrender.com/endpoint", {
       method: "POST",
       body: formData,
     })
@@ -470,6 +470,26 @@ document.getElementById('communeSelect').addEventListener('change', function () 
       console.error("Erreur lors de la requête :", error);
     });
   }
+
+// Test de connexion détaillé
+console.log('🔗 Test de connexion en cours...');
+fetch(`${API_BASE_URL}/health`)
+    .then(response => {
+        console.log('📡 Statut HTTP:', response.status);
+        console.log('🔗 URL utilisée:', `${API_BASE_URL}/health`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Réponse du backend:', data);
+    })
+    .catch(error => {
+        console.error('❌ Erreur de connexion:', error);
+        console.log('🌐 Configuration actuelle:', {
+            API_BASE_URL,
+            hostname: window.location.hostname,
+            fullUrl: window.location.href
+        });
+    });
    </script>
 </body>
 </html>
