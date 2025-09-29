@@ -441,6 +441,21 @@ document.getElementById('communeSelect').addEventListener('change', function () 
             document.getElementById('errorContainer').classList.add('d-none');
         });
     });
+
+// Exemple : envoyer des données vers le backend Render
+  function envoyerFormulaire(formData) {
+    fetch("https://mon-app-backend.onrender.com/endpoint", {
+      method: "POST",
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("Réponse backend :", data);
+    })
+    .catch(error => {
+      console.error("Erreur lors de la requête :", error);
+    });
+  }
    </script>
 </body>
 </html>
